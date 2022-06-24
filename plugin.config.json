@@ -1,0 +1,5 @@
+{
+	"extraScripts": [
+		"driver/markdownItRender/habitTracker/index.ts"
+	]
+}
