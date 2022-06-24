@@ -5,7 +5,7 @@ export const DEFAULT_SETTINGS: HabitTrackerPluginSettings = {
     startOfWeek: '0',
     monthFormat: 'YYYY-MM',
     displayHead: true,
-    enableHTML: false,
+    enableHTML: true,
     Sunday: 'SUN',
     Monday: 'MON',
     Tuesday: 'TUE',

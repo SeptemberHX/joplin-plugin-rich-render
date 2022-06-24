@@ -34,7 +34,6 @@ export class CMBlockMarkerHelper {
         const debounceProcess = debounce(this.process.bind(this), 100);
         this.editor.on('cursorActivity', debounceProcess);
         this.editor.on('viewportChange', debounceProcess);
-        // this.editor.on('cursorActivity', this.unfoldAtCursor.bind(this));
     }
 
     /**
@@ -137,7 +136,7 @@ export class CMBlockMarkerHelper {
 
             // not fold when the cursor is in the block
             if (cursor.line < from.line || cursor.line > to.line
-                || (cursor.line === from.line && cursor.ch < from.line)
+                || (cursor.line === from.line && cursor.ch < from.ch)
                 || (cursor.line === to.line && cursor.ch >= to.ch)) {
                 const wrapper = document.createElement('div');
                 const element = this.renderer(blockRange.beginMatch, blockRange.endMatch, blockContentLines.join('\n'));
@@ -179,15 +178,6 @@ export class CMBlockMarkerHelper {
                 };
             }
         }
-    }
-
-    private unfoldAtCursor() {
-        const cursor = this.editor.getCursor();
-        this.editor.findMarksAt(cursor).find((marker) => {
-            if (marker.className === this.MARKER_CLASS_NAME) {
-                marker.clear();
-            }
-        });
     }
 }
 
