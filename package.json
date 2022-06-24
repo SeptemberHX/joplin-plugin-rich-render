@@ -28,6 +28,8 @@
     "yargs": "^16.2.0"
   },
   "dependencies": {
-    "moment": "^2.29.3"
+    "codemirror": "^5.65.5",
+    "moment": "^2.29.3",
+    "ts-debounce": "^4.0.0"
   }
 }

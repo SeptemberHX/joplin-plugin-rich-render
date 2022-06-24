@@ -1,5 +1,6 @@
 {
 	"extraScripts": [
-		"driver/markdownItRender/habitTracker/index.ts"
+		"driver/habitTracker/markdownItRender/index.ts",
+		"driver/habitTracker/codemirror/index.ts"
 	]
 }

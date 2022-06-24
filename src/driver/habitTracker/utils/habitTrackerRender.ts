@@ -1,22 +1,7 @@
 import * as moment from "moment";
 import {createDiv, createEl} from "../../../utils/obsidian-tools";
 
-
-interface HabitTrackerPluginSettings {
-    startOfWeek: string;
-    monthFormat: string;
-    displayHead: boolean;
-    enableHTML: boolean;
-    Sunday: string;
-    Monday: string;
-    Tuesday: string;
-    Wednesday: string;
-    Thursday: string;
-    Friday: string;
-    Saturday: string;
-}
-
-const DEFAULT_SETTINGS: HabitTrackerPluginSettings = {
+export const DEFAULT_SETTINGS: HabitTrackerPluginSettings = {
     startOfWeek: '0',
     monthFormat: 'YYYY-MM',
     displayHead: true,
@@ -30,6 +15,20 @@ const DEFAULT_SETTINGS: HabitTrackerPluginSettings = {
     Saturday: 'SAT'
 }
 
+export interface HabitTrackerPluginSettings {
+    startOfWeek: string;
+    monthFormat: string;
+    displayHead: boolean;
+    enableHTML: boolean;
+    Sunday: string;
+    Monday: string;
+    Tuesday: string;
+    Wednesday: string;
+    Thursday: string;
+    Friday: string;
+    Saturday: string;
+}
+
 interface HabitTrackerContext {
     startOfWeek: number;
     startDay: number;
@@ -41,24 +40,7 @@ interface HabitTrackerContext {
     error: string
 }
 
-export function habitFenceRenderer(markdownIt, _options) {
-    const defaultRender = markdownIt.renderer.rules.fence || function (tokens, idx, options, env, self) {
-        return self.renderToken(tokens, idx, options, env, self);
-    };
-
-    markdownIt.renderer.rules.fence = function (tokens, idx, options, env, self) {
-        // console.log(tokens, idx);
-        const token = tokens[idx];
-        if (token.info !== 'habitt') {
-            return defaultRender(tokens, idx, options, env, self);
-        }
-
-        // @ts-ignore
-        return renderTable(token.content, DEFAULT_SETTINGS).outerHTML;
-    }
-}
-
-function renderTable (source: string, settings: HabitTrackerPluginSettings) {
+export function renderTable (source: string, settings: HabitTrackerPluginSettings) {
     const ctx = parseContext(source, settings);
 
     if (ctx.error) {

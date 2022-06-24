@@ -6,7 +6,12 @@ joplin.plugins.register({
 		await joplin.contentScripts.register(
 			ContentScriptType.MarkdownItPlugin,
 			'rich-render-habit',
-			'./driver/markdownItRender/habitTracker/index.js'
+			'./driver/habitTracker/markdownItRender/index.js'
+		);
+		await joplin.contentScripts.register(
+			ContentScriptType.CodeMirrorPlugin,
+			'cm-rich-render-habit',
+			'./driver/habitTracker/codemirror/index.js'
 		);
 	},
 });
