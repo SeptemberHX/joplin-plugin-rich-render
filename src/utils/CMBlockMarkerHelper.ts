@@ -34,6 +34,7 @@ export class CMBlockMarkerHelper {
         const debounceProcess = debounce(this.process.bind(this), 100);
         this.editor.on('cursorActivity', debounceProcess);
         this.editor.on('viewportChange', debounceProcess);
+        // this.editor.on('cursorActivity', this.unfoldAtCursor.bind(this));
     }
 
     /**
@@ -98,6 +99,16 @@ export class CMBlockMarkerHelper {
         this.editor.operation(() => {
             this._markRanges(blockRangeList);
         });
+        if (this.codeBlock) {
+            for (const el of document.getElementsByClassName('CodeMirror-widget')) {
+                if (el.parentElement && el.parentElement.parentElement.className.includes('cm-jn-code-block')) {
+                    const codeblockDiv = el.parentElement.parentElement.parentElement;
+                    if (codeblockDiv && codeblockDiv.children[0].className.includes('cm-jn-code-block-background')) {
+                        codeblockDiv.removeChild(codeblockDiv.firstChild);
+                    }
+                }
+            }
+        }
     }
 
     private _markRanges(blockRangeList) {
@@ -114,22 +125,20 @@ export class CMBlockMarkerHelper {
                 continue;
             }
 
-            let from = {line: blockRange.from, ch: 0};
-            let to = {line: blockRange.to, ch: this.editor.getLine(blockRange.to).length + 1};
-            if (this.codeBlock) {
-                from = {line: blockRange.from - 1, ch: this.editor.getLine(blockRange.from - 1).length};
-                to = {line: blockRange.to + 1, ch: 0};
-            }
-
             const cursor = this.editor.getCursor();
             const doc = this.editor.getDoc();
+            let from = {line: blockRange.from, ch: 0};
+            let to = {line: blockRange.to + 1, ch: 0};
+
             const blockContentLines = [];
             for (let i = from.line + 1; i <= to.line - 1; ++i) {
                 blockContentLines.push(this.editor.getLine(i));
             }
 
             // not fold when the cursor is in the block
-            if (!(cursor.line >= from.line && cursor.line <= to.line)) {
+            if (cursor.line < from.line || cursor.line > to.line
+                || (cursor.line === from.line && cursor.ch < from.line)
+                || (cursor.line === to.line && cursor.ch >= to.ch)) {
                 const wrapper = document.createElement('div');
                 const element = this.renderer(blockRange.beginMatch, blockRange.endMatch, blockContentLines.join('\n'));
                 wrapper.appendChild(element);
@@ -170,6 +179,15 @@ export class CMBlockMarkerHelper {
                 };
             }
         }
+    }
+
+    private unfoldAtCursor() {
+        const cursor = this.editor.getCursor();
+        this.editor.findMarksAt(cursor).find((marker) => {
+            if (marker.className === this.MARKER_CLASS_NAME) {
+                marker.clear();
+            }
+        });
     }
 }
 
