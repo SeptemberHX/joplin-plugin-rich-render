@@ -166,10 +166,13 @@ function renderBody (ctx: HabitTrackerContext): HTMLElement {
             if (hasOwn) {
                 const input = ctx.marks.get(d) || '✔️'
                 // treat as HTML
+                dots.innerHTML = '';
                 if (enableHTML) {
-                    dots.innerHTML = `<div>${input}</div>`
+                    for (const line of input.split(',')) {
+                        dots.innerHTML += `<div>${line}</div>`
+                    }
                 } else {
-                    dots.createDiv({ text: input });
+                    dots.createDiv({ text: input.split(',').join('\n') });
                 }
             }
         }
