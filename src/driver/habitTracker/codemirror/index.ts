@@ -16,7 +16,7 @@ module.exports = {
                             div.textContent = content;
                             return div;
                         }
-                    }, 'habitTracker-marker', false, true);
+                    }, 'habitTracker-marker', '===> Folded Habit Tracker Block <===', true, true);
                 });
             },
             codeMirrorOptions: {

@@ -2,6 +2,9 @@ import { debounce } from "ts-debounce";
 import CodeMirror, {TextMarker} from "codemirror";
 
 export class CMBlockMarkerHelper {
+
+    marker2LineWidget;
+
     /**
      * Constructor
      * @param editor Codemirror editor
@@ -11,7 +14,10 @@ export class CMBlockMarkerHelper {
      *                           It only works when the begin-token is matched
      * @param renderer Custom renderer function
      * @param MARKER_CLASS_NAME Target marker class name
+     * @param foldedInlineText The matched block will be replaced with the given foldedInlineText with an appended rendered widget
      * @param clearOnClick Whether we clear the marker with the rendered content when it is clicked by the mouse
+     * @param codeBlock? Whether it is matched as a code block or not. For code blocks, more works need to do
+     *                   to erase the background color
      */
     constructor(private readonly editor: CodeMirror.Editor,
                 private readonly blockRegexp: RegExp,
@@ -19,9 +25,11 @@ export class CMBlockMarkerHelper {
                 private readonly blockEndTokenRegex: RegExp,
                 private readonly renderer: (beginMatch, endMatch, content) => HTMLElement,
                 private readonly MARKER_CLASS_NAME: string,
+                private readonly foldedInlineText: string,
                 private readonly clearOnClick: boolean,
                 private readonly codeBlock?: boolean
     ) {
+        this.marker2LineWidget = {};
         this.init();
     }
 
@@ -34,6 +42,7 @@ export class CMBlockMarkerHelper {
         const debounceProcess = debounce(this.process.bind(this), 100);
         this.editor.on('cursorActivity', debounceProcess);
         this.editor.on('viewportChange', debounceProcess);
+        // this.editor.on('cursorActivity', this.unfoldAtCursor.bind(this));
     }
 
     /**
@@ -127,7 +136,7 @@ export class CMBlockMarkerHelper {
             const cursor = this.editor.getCursor();
             const doc = this.editor.getDoc();
             let from = {line: blockRange.from, ch: 0};
-            let to = {line: blockRange.to + 1, ch: 0};
+            let to = {line: blockRange.to, ch: this.editor.getLine(blockRange.to).length};
 
             const blockContentLines = [];
             for (let i = from.line + 1; i <= to.line - 1; ++i) {
@@ -137,15 +146,20 @@ export class CMBlockMarkerHelper {
             // not fold when the cursor is in the block
             if (cursor.line < from.line || cursor.line > to.line
                 || (cursor.line === from.line && cursor.ch < from.ch)
-                || (cursor.line === to.line && cursor.ch >= to.ch)) {
+                || (cursor.line === to.line && cursor.ch > to.ch)) {
                 const wrapper = document.createElement('div');
                 const element = this.renderer(blockRange.beginMatch, blockRange.endMatch, blockContentLines.join('\n'));
                 wrapper.appendChild(element);
+                const lineWidget = doc.addLineWidget(to.line, wrapper);
+                const foldMark = document.createElement('span');
+                foldMark.classList.add('block-fold-marker');
+                foldMark.textContent = this.foldedInlineText;
+                foldMark.style.cssText = 'color: lightgray; font-size: smaller; font-style: italic;';
                 const textMarker = doc.markText(
                     from,
                     to,
                     {
-                        replacedWith: wrapper,
+                        replacedWith: foldMark,
                         handleMouseEvents: true,
                         className: this.MARKER_CLASS_NAME, // class name is not renderer in DOM
                         inclusiveLeft: false,
@@ -159,11 +173,13 @@ export class CMBlockMarkerHelper {
                 editButton.hidden = true;
                 editButton.style.cssText = 'position: absolute; top: 8px; right: 10px; width: 20px; height: 20px;';
                 if (this.clearOnClick) {
-                    wrapper.onclick = (e) => {
+                    foldMark.onclick = (e) => {
+                        lineWidget.clear();
                         clickAndClear(textMarker, this.editor)(e);
                     };
                 }
                 editButton.onclick = (e) => {
+                    lineWidget.clear();
                     textMarker.clear();
                     doc.setCursor({line: from.line + 1, ch: 0});
                 }
@@ -176,7 +192,25 @@ export class CMBlockMarkerHelper {
                     editButton.hidden = true;
                     wrapper.style.border = '2px solid transparent';
                 };
+                this.marker2LineWidget[textMarker] = lineWidget;
             }
+        }
+    }
+
+    private unfoldAtCursor() {
+        const cursor = this.editor.getCursor();
+        this.editor.findMarksAt(cursor).find((marker) => {
+            if (marker.className === this.MARKER_CLASS_NAME) {
+                marker.clear();
+                this.clearMarkerLineWidget(marker);
+            }
+        });
+    }
+
+    private clearMarkerLineWidget(marker) {
+        if (marker in this.marker2LineWidget) {
+            this.marker2LineWidget[marker].clear();
+            delete this.marker2LineWidget[marker];
         }
     }
 }
