@@ -16,7 +16,12 @@ module.exports = {
                             div.textContent = content;
                             return div;
                         }
-                    }, 'habitTracker-marker', false, true);
+                    }, () => {
+                        const span = document.createElement('span');
+                        span.textContent = '===> Folded Habit Tracker Block <===';
+                        span.style.cssText = 'color: lightgray; font-size: smaller; font-style: italic;';
+                        return span;
+                    },'habitTracker-marker', true, true);
                 });
             },
             codeMirrorOptions: {
