@@ -122,6 +122,7 @@ export class CMBlockMarkerHelper {
 
     private _markRanges(blockRangeList) {
         for (const blockRange of blockRangeList) {
+            console.log('===> processing', blockRange);
             const cursor = this.editor.getCursor();
             const doc = this.editor.getDoc();
             let from = {line: blockRange.from, ch: 0};
@@ -129,9 +130,10 @@ export class CMBlockMarkerHelper {
 
             // check whether we have created a marker for it before
             let existingMarker;
-            this.editor.findMarksAt({line: blockRange.from, ch: 0}).find((marker) => {
+            this.editor.findMarksAt(from, to).find((marker) => {
                 if (marker.className === this.MARKER_CLASS_NAME) {
                     existingMarker = marker;
+                    console.log('===> Found exiting marker', existingMarker);
                 }
             });
 
@@ -139,14 +141,18 @@ export class CMBlockMarkerHelper {
             if (existingMarker) {
                 // however, when undoing the marker deleting, we need to re-create the rendered line widget
                 //    otherwise, the line widget is lost.
-                const lineWidget = this.marker2LineWidget[existingMarker];
-                if (lineWidget.node) {
-                    this.createLineWidgetForMarker(doc, to.line, existingMarker, lineWidget.node);
-                    lineWidget.clear();
-                }
-                // both the marker and the line widget are placed. we can go on for the next matched area.
+                // const lineWidget = this.marker2LineWidget[existingMarker];
+                // if (lineWidget.node && lineWidget.node.parentElement && lineWidget.node.parentElement.getBoundingClientRect().height === 0) {
+                //     console.log('===> LineWidget is invisible');
+                //     existingMarker.clear();
+                // } else {
+                //     console.log('===> All fine');
+                //     // both the marker and the line widget are placed. we can go on for the next matched area.
+                //     continue;
+                // }
                 continue;
             }
+            console.log('===> Check finished');
 
             // get the content in the block without the begin/end tokens
             const blockContentLines = [];
@@ -220,14 +226,12 @@ export class CMBlockMarkerHelper {
         if (this.clearOnClick) {
             makerEl.onclick = (e) => {
                 this.clearLineWidgetForMarker(textMarker, wrapperLineWidget);
-                delete this.marker2LineWidget[textMarker];
                 clickAndClear(textMarker, this.editor)(e);
             };
         }
         editButton.onclick = (e) => {
             this.clearLineWidgetForMarker(textMarker, wrapperLineWidget);
             textMarker.clear();
-            delete this.marker2LineWidget[textMarker];
             doc.setCursor({line: from.line + 1, ch: 0});
         }
         renderedWrapper.appendChild(editButton);
